@@ -1,0 +1,122 @@
+{
+  "builders": [
+    {
+      "boot_command": [
+        "<esc><wait>",
+        "<esc><wait>",
+        "<enter><wait>",
+        "/install/vmlinuz<wait>",
+        " auto<wait>",
+        " console-setup/ask_detect=false<wait>",
+        " console-setup/layoutcode=us<wait>",
+        " console-setup/modelcode=pc105<wait>",
+        " debconf/frontend=noninteractive<wait>",
+        " debian-installer=en_US.UTF-8<wait>",
+        " fb=false<wait>",
+        " initrd=/install/initrd.gz<wait>",
+        " kbd-chooser/method=us<wait>",
+        " keyboard-configuration/layout=USA<wait>",
+        " keyboard-configuration/variant=USA<wait>",
+        " locale=en_US.UTF-8<wait>",
+        " netcfg/get_domain=vm<wait>",
+        " netcfg/get_hostname=vagrant<wait>",
+        " grub-installer/bootdev=/dev/sda<wait>",
+        " noapic<wait>",
+        " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg<wait>",
+        " -- <wait>",
+        "<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": "{{user `disk_size`}}",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "guest_os_type": "Ubuntu_64",
+      "hard_drive_discard": "true",
+      "hard_drive_interface": "sata",
+      "hard_drive_nonrotational": "true",
+      "headless": "false",
+      "http_directory": "http",
+      "iso_checksum": "sha256:36f15879bd9dfd061cd588620a164a82972663fdd148cce1f70d57d314c21b73",
+      "iso_url": "http://cdimage.ubuntu.com/ubuntu-legacy-server/releases/20.04/release/ubuntu-20.04-legacy-server-amd64.iso",
+      "output_directory": "{{user `output_directory`}}",
+      "shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now",
+      "sound": "none",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_timeout": "10000s",
+      "ssh_username": "vagrant",
+      "type": "virtualbox-iso",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "{{ user `memory` }}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "{{ user `cpus` }}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--audio",
+          "none"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--usb",
+          "off"
+        ]
+      ],
+      "vboxmanage_post": [
+        [
+          "modifyhd",
+          "--compact",
+          "{{pwd}}/{{user `output_directory`}}/{{user `vm_name`}}.vdi"
+        ]
+      ],
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{user `vm_name`}}"
+    }
+  ],
+  "description": "A Packer template to build Ubuntu 20.04 Server box",
+  "min_packer_version": "1.6.0",
+  "post-processors": [
+    {
+      "compression_level": "9",
+      "output": "ubuntu-20.04-server-amd64.box",
+      "type": "vagrant"
+    }
+  ],
+  "provisioners": [
+    {
+      "environment_vars": [
+        "HOME_DIR=/home/vagrant"
+      ],
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E sh -eux '{{.Path}}'",
+      "expect_disconnect": true,
+      "scripts": [
+        "scripts/update.sh",
+        "scripts/sshd.sh",
+        "scripts/networking.sh",
+        "scripts/sudoers.sh",
+        "scripts/vagrant.sh",
+        "scripts/virtualbox.sh",
+        "scripts/cleanup.sh",
+        "scripts/minimize.sh"
+      ],
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "cpus": "1",
+    "disk_size": "8448",
+    "memory": "512",
+    "output_directory": "build",
+    "vm_name": "packer-ubuntu-20.04-server-amd64"
+  }
+}
+
