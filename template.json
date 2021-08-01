@@ -83,7 +83,7 @@
     }
   ],
   "description": "A Packer template to build Ubuntu 20.04 Server box",
-  "min_packer_version": "1.6.2",
+  "min_packer_version": "1.7.4",
   "post-processors": [
     {
       "compression_level": "9",
